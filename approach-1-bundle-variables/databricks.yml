@@ -1,0 +1,32 @@
+# Approach 1: names live in config/names.yml as bundle variables.
+# The bundle owns the schemas, the base table and the shared view.
+# Terraform (infra/) owns the recipients, the share and the grants.
+bundle:
+  name: opensharing_ex1
+
+include:
+  - config/names.yml
+  - resources/*.yml
+
+sync:
+  exclude:
+    - infra/**
+    - scripts/**
+
+# No `mode: development` on purpose: development mode prefixes resource names,
+# including schema names, so the bundle would create names that Terraform does
+# not know about.
+targets:
+  dev:
+    default: true
+    # Pin the workspace for real use, for example:
+    # workspace:
+    #   host: https://1234567890123456.7.gcp.databricks.com
+  prod:
+    mode: production
+    workspace:
+      # host: https://1234567890123456.7.gcp.databricks.com
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+    # Deploy production from CI as a service principal:
+    # run_as:
+    #   service_principal_name: 00000000-0000-0000-0000-000000000000

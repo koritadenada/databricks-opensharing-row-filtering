@@ -1,0 +1,17 @@
+# Databricks bundle state
+.databricks/
+
+# Terraform: local state and plans (state holds recipient activation links)
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfstate.d/
+*.tfplan
+crash.log
+
+# OpenSharing credential files downloaded from activation links
+*.share
+
+# Python
+.venv/
+__pycache__/

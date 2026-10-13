@@ -1,0 +1,50 @@
+# Approach 2: names live in a flat file per target (config/<target>.yml).
+# scripts/deploy.sh passes them to the bundle as BUNDLE_VAR_* environment
+# variables and to Terraform as TF_VAR_* environment variables.
+# The bundle owns the schemas, the base table and the shared view.
+# Terraform (infra/) owns the recipients, the share and the grants.
+bundle:
+  name: opensharing_ex2
+
+include:
+  - resources/*.yml
+
+sync:
+  exclude:
+    - config/**
+    - infra/**
+    - scripts/**
+
+# No defaults: a deploy without config/<target>.yml fails instead of silently
+# using names that Terraform does not know about.
+variables:
+  catalog:
+    description: Existing catalog that holds the example schemas.
+  core_schema:
+    description: Schema for base tables. Never shared directly.
+  shared_schema:
+    description: Schema for the recipient-filtered views that are added to shares.
+  orders_table:
+    description: Base table with all rows.
+  shared_view:
+    description: Dynamic view that returns only the rows a recipient may read.
+  recipient_property:
+    description: Recipient property key compared with the region column by current_recipient().
+
+# No `mode: development` on purpose: development mode prefixes resource names,
+# including schema names, so the bundle would create names that Terraform does
+# not know about.
+targets:
+  dev:
+    default: true
+    # Pin the workspace for real use, for example:
+    # workspace:
+    #   host: https://1234567890123456.7.gcp.databricks.com
+  prod:
+    mode: production
+    workspace:
+      # host: https://1234567890123456.7.gcp.databricks.com
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+    # Deploy production from CI as a service principal:
+    # run_as:
+    #   service_principal_name: 00000000-0000-0000-0000-000000000000

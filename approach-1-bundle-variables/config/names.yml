@@ -1,0 +1,43 @@
+# Single source of truth for every name that both the bundle and Terraform use.
+#
+# The bundle includes this file directly (see `include` in databricks.yml), so
+# these are regular bundle variables. Terraform reads the same file with
+# yamldecode() in infra/main.tf: it takes each variable's `default` and then
+# applies the overrides under `targets.<target>.variables`.
+#
+# Keep values here, not in --var flags or BUNDLE_VAR_* environment variables:
+# Terraform only sees what is in this file.
+
+variables:
+  catalog:
+    description: Existing catalog that holds the example schemas.
+    default: main
+  core_schema:
+    description: Schema for base tables. Never shared directly.
+    default: opensharing_ex1_core
+  shared_schema:
+    description: Schema for the recipient-filtered views that are added to shares.
+    default: opensharing_ex1_shared
+  orders_table:
+    description: Base table with all rows.
+    default: orders
+  shared_view:
+    description: Dynamic view that returns only the rows a recipient may read.
+    default: orders_by_region
+  recipient_property:
+    description: Recipient property key compared with the region column by current_recipient().
+    default: region
+  share_name:
+    description: OpenSharing share that exposes the view.
+    default: opensharing_ex1_orders
+  shared_as:
+    description: Name recipients see inside the share (<schema>.<table>). Set once; changing it recreates the share object.
+    default: sales.orders
+
+targets:
+  dev:
+    variables:
+      catalog: main
+  prod:
+    variables:
+      catalog: prod

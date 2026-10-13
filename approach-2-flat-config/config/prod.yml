@@ -1,0 +1,14 @@
+# Single source of truth for every name that both the bundle and Terraform use
+# in the `prod` target. Plain key: value pairs, no tool-specific syntax.
+#
+# scripts/deploy.sh exports each key twice, as BUNDLE_VAR_<key> for the bundle
+# and TF_VAR_<key> for Terraform. Neither tool has defaults for these values,
+# so running either one without this file fails instead of using stale names.
+catalog: prod
+core_schema: opensharing_ex2_core
+shared_schema: opensharing_ex2_shared
+orders_table: orders
+shared_view: orders_by_region
+recipient_property: region
+share_name: opensharing_ex2_orders
+shared_as: sales.orders

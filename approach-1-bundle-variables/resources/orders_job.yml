@@ -1,0 +1,30 @@
+resources:
+  jobs:
+    orders_build:
+      name: opensharing-ex1-orders-build
+      description: Builds the orders base table and the recipient-filtered view that Terraform adds to the share.
+      max_concurrent_runs: 1
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: core_schema
+          default: ${resources.schemas.core.name}
+        - name: shared_schema
+          default: ${resources.schemas.shared.name}
+        - name: orders_table
+          default: ${var.orders_table}
+        - name: shared_view
+          default: ${var.shared_view}
+        - name: recipient_property
+          default: ${var.recipient_property}
+      tasks:
+        # Stands in for your real pipeline: any job or pipeline task that
+        # writes ${var.orders_table} works the same way.
+        - task_key: create_orders
+          notebook_task:
+            notebook_path: ../src/01_create_orders.py
+        - task_key: create_shared_view
+          depends_on:
+            - task_key: create_orders
+          notebook_task:
+            notebook_path: ../src/02_create_shared_view.py

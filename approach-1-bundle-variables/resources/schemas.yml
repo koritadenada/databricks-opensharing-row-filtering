@@ -1,0 +1,10 @@
+resources:
+  schemas:
+    core:
+      catalog_name: ${var.catalog}
+      name: ${var.core_schema}
+      comment: Base tables with all rows. Not added to any share.
+    shared:
+      catalog_name: ${var.catalog}
+      name: ${var.shared_schema}
+      comment: Recipient-filtered views that are added to OpenSharing shares.
