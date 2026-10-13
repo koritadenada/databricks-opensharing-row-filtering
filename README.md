@@ -20,7 +20,9 @@ in different ways:
 
 
 Both approaches deploy the same objects and can run side by side in one
-workspace (all names differ: `opensharing_ex1_*` and `opensharing_ex2_*`).
+workspace: their names differ (`opensharing_ex1_*` and `opensharing_ex2_*`),
+and so do the share and recipient names of each target, because shares and
+recipients are unique per metastore.
 
 ## What gets deployed
 
@@ -119,7 +121,8 @@ scripts/deploy.sh dev
   Terraform looks up the view first and stops if it does not exist.
 
 Each target gets its own Terraform workspace, so `dev` and `prod` keep separate
-state.
+state. Terraform asks for confirmation before applying; set `AUTO_APPROVE=1` to
+skip the prompts in CI (any other value keeps them).
 
 ## Test as a recipient
 
@@ -167,9 +170,14 @@ object, and recipients see a different name unless `shared_as` is set. Set
 - **Update shared views with** `ALTER VIEW`**, not** `CREATE OR REPLACE VIEW`**.** A
 view that is in a share cannot be dropped, and `CREATE OR REPLACE VIEW`
 fails with `DELTA_SHARING_SECURABLE_DELETE_BLOCKED`. The view task creates
-the view once (`CREATE VIEW IF NOT EXISTS`) and then always runs
-`ALTER VIEW ... AS`
+the view on the first run and updates it with `ALTER VIEW ... AS` afterwards
 ([ALTER VIEW](https://docs.databricks.com/gcp/en/sql/language-manual/sql-ref-syntax-ddl-alter-view)).
+- **Rebuild the base table in one statement.** The example uses a single
+`CREATE OR REPLACE TABLE ... AS SELECT`, which is one Delta commit, so
+recipients never read an empty table while it is rebuilt.
+- **Share and recipient names are metastore-wide.** Workspaces that share a
+metastore also share these names, so give every target and every copy of
+this example its own share and recipient names.
 - **The view lists its columns explicitly.** A new column in the base table
 does not reach recipients until you add it to the view on purpose.
 - **No bundle development mode.** `mode: development` prefixes resource names,
@@ -216,7 +224,11 @@ changes nothing.
 recipients keep reading.
 - Terraform stops at plan time when the view does not exist or the target is
 unknown; approach 2 fails fast when its config file is not loaded.
-- `scripts/destroy.sh` removes everything.
+- Re-running the job while recipients are connected keeps the share
+working; the view is updated in place.
+- Prod names do not collide with dev names in the same metastore.
+- `scripts/destroy.sh` removes everything, also after a deploy that failed
+before the Terraform step.
 
 The configuration is cloud-agnostic. Documentation links point to Databricks
 on Google Cloud.
@@ -233,6 +245,7 @@ approach-2-flat-config/         names in a flat file, passed to both tools as en
   infra/                        Terraform: recipients, share, grants; env/<target>.tfvars
   scripts/                      deploy.sh, destroy.sh (dependency order)
 tools/verify_share.py           recipient-side check of the row filter
+tools/check_approaches_in_sync.sh  fails if files shared by both approaches drift apart
 ```
 
 ## License

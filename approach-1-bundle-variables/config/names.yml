@@ -41,3 +41,4 @@ targets:
   prod:
     variables:
       catalog: prod
+      share_name: opensharing_ex1_orders_prod

@@ -10,5 +10,5 @@ shared_schema: opensharing_ex2_shared
 orders_table: orders
 shared_view: orders_by_region
 recipient_property: region
-share_name: opensharing_ex2_orders
+share_name: opensharing_ex2_orders_prod
 shared_as: sales.orders

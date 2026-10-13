@@ -15,6 +15,11 @@ cd "$(dirname "$0")/.."
 echo "==> Names from config/${target}.yml"
 source scripts/load-config.sh
 
+tf_approve=""
+if [[ "${AUTO_APPROVE:-0}" == "1" ]]; then
+  tf_approve="-auto-approve"
+fi
+
 echo "==> Bundle: validate, deploy, build table and view (target: ${target})"
 databricks bundle validate --target "${target}"
 databricks bundle deploy --target "${target}"
@@ -23,4 +28,4 @@ databricks bundle run --target "${target}" orders_build
 echo "==> Terraform: recipients, share, grants (workspace: ${target})"
 terraform -chdir=infra init -input=false
 terraform -chdir=infra workspace select -or-create "${target}"
-terraform -chdir=infra apply -input=false -var-file="env/${target}.tfvars" ${AUTO_APPROVE:+-auto-approve}
+terraform -chdir=infra apply -input=false -var-file="env/${target}.tfvars" ${tf_approve}

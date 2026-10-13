@@ -25,7 +25,7 @@ resource "databricks_recipient" "this" {
   for_each = var.recipients
 
   name                = each.key
-  comment             = "Reads ${local.names.shared_as} rows where region = ${each.value}. Managed by Terraform."
+  comment             = "Reads ${local.names.shared_as} rows for ${local.names.recipient_property} = ${each.value}. Managed by Terraform."
   authentication_type = "TOKEN"
 
   properties_kvpairs {
@@ -38,6 +38,13 @@ resource "databricks_recipient" "this" {
 resource "databricks_share" "this" {
   name    = local.names.share_name
   comment = "Recipient-filtered orders. Managed by Terraform."
+
+  lifecycle {
+    precondition {
+      condition     = can(regex("^[A-Za-z0-9_]+\\.[A-Za-z0-9_]+$", local.names.shared_as))
+      error_message = "shared_as in config/names.yml must be a two-part name <schema>.<table> with letters, digits and underscores."
+    }
+  }
 
   object {
     name             = data.databricks_table.shared_view.name

@@ -5,7 +5,7 @@ output "share_name" {
 
 output "shared_table" {
   description = "Table name recipients query inside the share."
-  value       = "${databricks_share.this.name}.${local.names.shared_as}"
+  value       = "${databricks_share.this.name}.${databricks_share.this.object[0].shared_as}"
 }
 
 output "activation_urls" {

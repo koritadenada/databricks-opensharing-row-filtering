@@ -8,7 +8,7 @@ resource "databricks_recipient" "this" {
   for_each = var.recipients
 
   name                = each.key
-  comment             = "Reads ${var.shared_as} rows where region = ${each.value}. Managed by Terraform."
+  comment             = "Reads ${var.shared_as} rows for ${var.recipient_property} = ${each.value}. Managed by Terraform."
   authentication_type = "TOKEN"
 
   properties_kvpairs {

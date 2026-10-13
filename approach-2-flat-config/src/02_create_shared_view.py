@@ -14,13 +14,15 @@
 
 import re
 
-IDENTIFIER = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+# Unity Catalog names are backtick-quoted below, so most characters are fine.
+# Reject only characters that would break the quoting or the name structure.
+NAME = re.compile(r"^[^\s`'\"./\\]+$")
 
 
 def param(name: str) -> str:
     value = dbutils.widgets.get(name)
-    if not IDENTIFIER.match(value):
-        raise ValueError(f"Job parameter {name}={value!r} is not a valid identifier")
+    if not NAME.match(value):
+        raise ValueError(f"Job parameter {name}={value!r} is not a valid Unity Catalog name")
     return value
 
 
@@ -45,15 +47,17 @@ query = f"""
 """
 
 # A view that is in a share cannot be dropped, and CREATE OR REPLACE VIEW
-# drops it. Create the view once, then update it in place with ALTER VIEW so
-# the share keeps pointing at the same object.
+# drops it. Create the view on the first run; afterwards update it in place
+# with ALTER VIEW so the share keeps pointing at the same object.
+if spark.catalog.tableExists(view):
+    spark.sql(f"ALTER VIEW {view} AS {query}")
+else:
+    spark.sql(f"CREATE VIEW {view} AS {query}")
+
+# Set on every run so the comment follows changes to the recipient property.
 spark.sql(
-    f"""
-    CREATE VIEW IF NOT EXISTS {view}
-    COMMENT 'Orders filtered to the region in the querying recipient''s `{recipient_property}` property.'
-    AS {query}
-    """
+    f"COMMENT ON TABLE {view} IS "
+    f"'Orders filtered to the region in the recipient property `{recipient_property}` of the querying recipient.'"
 )
-spark.sql(f"ALTER VIEW {view} AS {query}")
 
 print(f"{view} now reads from {orders}")

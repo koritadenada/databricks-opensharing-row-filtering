@@ -50,7 +50,9 @@ terraform -chdir=infra apply -var-file=env/dev.tfvars
   tool uses it. Each tool ignores environment variables for variables it does
   not declare.
 - **Always deploy through `scripts/deploy.sh`** (locally and in CI), or source
-  `scripts/load-config.sh` first when running commands by hand.
+  `scripts/load-config.sh` first when running commands by hand. It clears all
+  existing `BUNDLE_VAR_*` and `TF_VAR_*` variables before exporting the new
+  ones, so values from another target cannot leak in.
 - **Other tools can read the same file.** It is plain YAML, so CI pipelines,
   tests or documentation generators can use it without knowing bundle syntax.
 
