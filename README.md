@@ -251,3 +251,6 @@ tools/check_approaches_in_sync.sh  fails if files shared by both approaches drif
 ## License
 
 [Apache License 2.0](LICENSE)
+
+This is example code provided as-is, without warranty. It is not an officially
+supported Databricks product.
